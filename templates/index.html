@@ -1,12 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>GitHub Webhook Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #333; }
+        ul { list-style-type: none; padding: 0; }
+        li { margin: 10px 0; padding: 10px; background-color: #f2f2f2; border-radius: 5px; }
+    </style>
 </head>
 <body>
-    <p> hello </p>
+    <h1>🔔 GitHub Event Feed</h1>
+    <ul id="events"></ul>
+
+    <script>
+        async function fetchEvents() {
+            const res = await fetch('/events');
+            const data = await res.json();
+            const list = document.getElementById('events');
+            list.innerHTML = '';
+
+            data.forEach(event => {
+                const item = document.createElement('li');
+                let text = '';
+
+                if (event.type === 'push') {
+                    text = `${event.author} pushed to ${event.to_branch} on ${event.timestamp}`;
+                } else if (event.type === 'pull_request') {
+                    text = `${event.author} submitted a pull request from ${event.from_branch} to ${event.to_branch} on ${event.timestamp}`;
+                } else if (event.type === 'merge') {
+                    text = `${event.author} merged ${event.from_branch} into ${event.to_branch} on ${event.timestamp}`;
+                } else if (event.type === 'pull_request_review') {
+                    text = `${event.author} reviewed a PR with state "${event.state}" on ${event.timestamp}`;
+                } else if (event.type === 'release') {
+                    text = `${event.author} published release "${event.tag}" on ${event.timestamp}`;
+                } else if (event.type === 'issue') {
+                    text = `${event.author} opened issue "${event.title}" on ${event.timestamp}`;
+                } else if (event.type === 'member') {
+                    text = `${event.author} ${event.action} member ${event.member} on ${event.timestamp}`;
+                }
+
+                item.textContent = text;
+                list.appendChild(item);
+            });
+        }
+
+        fetchEvents(); // Initial load
+        setInterval(fetchEvents, 15000); // Refresh every 15 seconds
+    </script>
 </body>
 </html>
