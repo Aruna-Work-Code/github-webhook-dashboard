@@ -121,7 +121,7 @@
 
         // Create human-readable message
         if (event.type === 'push') {
-          message = `${event.author} pushed to <strong>${event.to_branch}</strong>`;
+          message = `${event.author} pushed to branch <strong>${event.to_branch}</strong>`;
         } else if (event.type === 'pull_request') {
           message = `${event.author} opened a pull request from <strong>${event.from_branch}</strong> to <strong>${event.to_branch}</strong>`;
         } else if (event.type === 'merge') {
