@@ -1,52 +1,137 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>GitHub Webhook Tracker</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        h1 { color: #333; }
-        ul { list-style-type: none; padding: 0; }
-        li { margin: 10px 0; padding: 10px; background-color: #f2f2f2; border-radius: 5px; }
-    </style>
+  <meta charset="UTF-8">
+  <title>GitHub Webhook Events</title>
+
+  <!-- Internal CSS to style the UI cleanly -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    /* Each event card (box) */
+    .event-card {
+      background-color: #fff;
+      border-left: 5px solid #3498db; /* Default color (blue) */
+      margin-bottom: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Soft shadow */
+    }
+
+    /* Top text for the event type */
+    .event-type {
+      font-weight: bold;
+      color: #3498db;
+      margin-bottom: 8px;
+    }
+
+    /* Bottom text for details */
+    .event-detail {
+      font-size: 14px;
+    }
+
+    /* Custom colors for each type */
+    .push       { border-color: #3498db; }
+    .pr         { border-color: #8e44ad; }
+    .merge      { border-color: #27ae60; }
+    .review     { border-color: #f39c12; }
+    .release    { border-color: #e67e22; }
+    .issue      { border-color: #c0392b; }
+    .member     { border-color: #16a085; }
+  </style>
 </head>
+
 <body>
-    <h1>🔔 GitHub Event Feed</h1>
-    <ul id="events"></ul>
+  <!-- Heading -->
+  <h1>🔔 GitHub Event Feed</h1>
 
-    <script>
-        async function fetchEvents() {
-            const res = await fetch('/events');
-            const data = await res.json();
-            const list = document.getElementById('events');
-            list.innerHTML = '';
+  <!-- Container where all events will be displayed -->
+  <div id="event-container"></div>
 
-            data.forEach(event => {
-                const item = document.createElement('li');
-                let text = '';
+  <!-- JavaScript to fetch and display events -->
+  <script>
+    // Function to fetch events from the Flask API
+    async function fetchEvents() {
+      const res = await fetch('/events');          // Call the /events API
+      const data = await res.json();               // Convert response to JSON
+      const container = document.getElementById('event-container');
+      container.innerHTML = '';                    // Clear previous events
 
-                if (event.type === 'push') {
-                    text = `${event.author} pushed to ${event.to_branch} on ${event.timestamp}`;
-                } else if (event.type === 'pull_request') {
-                    text = `${event.author} submitted a pull request from ${event.from_branch} to ${event.to_branch} on ${event.timestamp}`;
-                } else if (event.type === 'merge') {
-                    text = `${event.author} merged ${event.from_branch} into ${event.to_branch} on ${event.timestamp}`;
-                } else if (event.type === 'pull_request_review') {
-                    text = `${event.author} reviewed a PR with state "${event.state}" on ${event.timestamp}`;
-                } else if (event.type === 'release') {
-                    text = `${event.author} published release "${event.tag}" on ${event.timestamp}`;
-                } else if (event.type === 'issue') {
-                    text = `${event.author} opened issue "${event.title}" on ${event.timestamp}`;
-                } else if (event.type === 'member') {
-                    text = `${event.author} ${event.action} member ${event.member} on ${event.timestamp}`;
-                }
+      // Loop through each event and show it on the page
+      data.forEach(event => {
+        const div = document.createElement('div'); // Create a card div
+        div.classList.add('event-card');           // Add default card style
 
-                item.textContent = text;
-                list.appendChild(item);
-            });
+        // Add color class based on event type
+        const typeClass = {
+          push: 'push',
+          pull_request: 'pr',
+          merge: 'merge',
+          pull_request_review: 'review',
+          release: 'release',
+          issue: 'issue',
+          member: 'member'
+        }[event.type];
+
+        if (typeClass) div.classList.add(typeClass);  // Apply custom color
+
+        // Friendly event type names
+        const typeDisplay = {
+          push: 'Push',
+          pull_request: 'Pull Request',
+          merge: 'Merge',
+          pull_request_review: 'PR Review',
+          release: 'Release',
+          issue: 'Issue',
+          member: 'Member Change'
+        }[event.type] || event.type;
+
+        // Format the message based on event type
+        let message = '';
+
+        if (event.type === 'push') {
+          message = `${event.author} pushed to ${event.to_branch}`;
+        } else if (event.type === 'pull_request') {
+          message = `${event.author} opened a pull request from ${event.from_branch} to ${event.to_branch}`;
+        } else if (event.type === 'merge') {
+          message = `${event.author} merged ${event.from_branch} into ${event.to_branch}`;
+        } else if (event.type === 'pull_request_review') {
+          message = `${event.author} reviewed a pull request (state: ${event.state})`;
+        } else if (event.type === 'release') {
+          message = `${event.author} published release: ${event.tag}`;
+        } else if (event.type === 'issue') {
+          message = `${event.author} opened issue: "${event.title}"`;
+        } else if (event.type === 'member') {
+          message = `${event.author} ${event.action} member ${event.member}`;
         }
 
-        fetchEvents(); // Initial load
-        setInterval(fetchEvents, 15000); // Refresh every 15 seconds
-    </script>
+        // Build HTML inside the card
+        div.innerHTML = `
+          <div class="event-type">📌 ${typeDisplay}</div>
+          <div class="event-detail">${message}</div>
+          <div class="event-detail">🕒 ${event.timestamp}</div>
+        `;
+
+        // Add card to the page
+        container.appendChild(div);
+      });
+    }
+
+    // Run the function once when the page loads
+    fetchEvents();
+
+    // Repeat every 15 seconds to refresh
+    setInterval(fetchEvents, 15000);
+  </script>
 </body>
 </html>
