@@ -17,10 +17,9 @@
       margin-bottom: 30px;
     }
 
-    /* Card style for each GitHub event */
     .event-card {
       background-color: #ffffff;
-      border-left: 6px solid #0984e3; /* default blue */
+      border-left: 6px solid #0984e3;
       margin: 15px auto;
       max-width: 700px;
       padding: 20px;
@@ -67,14 +66,13 @@
       margin-top: 8px;
     }
 
-    /* Color classes for different event types */
-    .push       { border-left-color: #0984e3; }  /* Blue */
-    .pr         { border-left-color: #6c5ce7; }  /* Purple */
-    .merge      { border-left-color: #00b894; }  /* Green */
-    .review     { border-left-color: #fdcb6e; }  /* Yellow */
-    .release    { border-left-color: #e17055; }  /* Orange */
-    .issue      { border-left-color: #d63031; }  /* Red */
-    .member     { border-left-color: #00cec9; }  /* Teal */
+    .push       { border-left-color: #0984e3; }
+    .pr         { border-left-color: #6c5ce7; }
+    .merge      { border-left-color: #00b894; }
+    .review     { border-left-color: #fdcb6e; }
+    .release    { border-left-color: #e17055; }
+    .issue      { border-left-color: #d63031; }
+    .member     { border-left-color: #00cec9; }
   </style>
 </head>
 <body>
@@ -84,73 +82,73 @@
 
   <script>
     async function fetchEvents() {
-      const res = await fetch('/events');
-      const data = await res.json();
-      const container = document.getElementById('event-container');
-      container.innerHTML = ''; // Clear previous content
+      try {
+        const res = await fetch('/events');
+        const data = await res.json();
+        const container = document.getElementById('event-container');
+        container.innerHTML = '';
 
-      data.forEach(event => {
-        const div = document.createElement('div');
-        div.classList.add('event-card');
+        data.forEach(event => {
+          const div = document.createElement('div');
+          div.classList.add('event-card');
 
-        // Assign color class
-        const typeClass = {
-          push: 'push',
-          pull_request: 'pr',
-          merge: 'merge',
-          pull_request_review: 'review',
-          release: 'release',
-          issue: 'issue',
-          member: 'member'
-        }[event.type];
+          const typeClass = {
+            push: 'push',
+            pull_request: 'pr',
+            merge: 'merge',
+            pull_request_review: 'review',
+            release: 'release',
+            issue: 'issue',
+            member: 'member'
+          }[event.type];
 
-        if (typeClass) div.classList.add(typeClass);
+          if (typeClass) div.classList.add(typeClass);
 
-        // Display names
-        const typeLabel = {
-          push: 'Push',
-          pull_request: 'Pull Request',
-          merge: 'Merge',
-          pull_request_review: 'PR Review',
-          release: 'Release',
-          issue: 'Issue',
-          member: 'Member Change'
-        }[event.type] || event.type;
+          const typeLabel = {
+            push: 'Push',
+            pull_request: 'Pull Request',
+            merge: 'Merge',
+            pull_request_review: 'PR Review',
+            release: 'Release',
+            issue: 'Issue',
+            member: 'Member Change'
+          }[event.type] || event.type;
 
-        let message = '';
+          let message = '';
 
-        // Create human-readable message
-        if (event.type === 'push') {
-          message = `${event.author} pushed to branch <strong>${event.to_branch}</strong>`;
-        } else if (event.type === 'pull_request') {
-          message = `${event.author} opened a pull request from <strong>${event.from_branch}</strong> to <strong>${event.to_branch}</strong>`;
-        } else if (event.type === 'merge') {
-          message = `${event.author} merged <strong>${event.from_branch}</strong> into <strong>${event.to_branch}</strong>`;
-        } else if (event.type === 'pull_request_review') {
-          message = `${event.author} reviewed a pull request (state: <strong>${event.state}</strong>)`;
-        } else if (event.type === 'release') {
-          message = `${event.author} published a release <strong>${event.tag}</strong>`;
-        } else if (event.type === 'issue') {
-          message = `${event.author} opened an issue titled "<strong>${event.title}</strong>"`;
-        } else if (event.type === 'member') {
-          message = `${event.author} <strong>${event.action}</strong> member <strong>${event.member}</strong>`;
-        }
+          if (event.type === 'push') {
+            message = `${event.author} pushed to branch <strong>${event.to_branch}</strong>`;
+          } else if (event.type === 'pull_request') {
+            message = `${event.author} opened a pull request from <strong>${event.from_branch}</strong> to <strong>${event.to_branch}</strong>`;
+          } else if (event.type === 'merge') {
+            message = `${event.author} merged <strong>${event.from_branch}</strong> into <strong>${event.to_branch}</strong>`;
+          } else if (event.type === 'pull_request_review') {
+            message = `${event.author} reviewed a pull request (state: <strong>${event.state}</strong>)`;
+          } else if (event.type === 'release') {
+            message = `${event.author} published a release <strong>${event.tag}</strong>`;
+          } else if (event.type === 'issue') {
+            message = `${event.author} opened an issue titled "<strong>${event.title}</strong>"`;
+          } else if (event.type === 'member') {
+            message = `${event.author} <strong>${event.action}</strong> member <strong>${event.member}</strong>`;
+          }
 
-        // Add content to card
-        div.innerHTML = `
-          <div class="event-type">
-            📌 ${typeLabel} <span>${event.type}</span>
-          </div>
-          <div class="event-message">${message}</div>
-          <div class="timestamp">🕒 ${event.timestamp}</div>
-        `;
+          div.innerHTML = `
+            <div class="event-type">
+              📌 ${typeLabel} <span>${event.type}</span>
+            </div>
+            <div class="event-message">${message}</div>
+            <div class="timestamp">🕒 ${event.timestamp}</div>
+          `;
 
-        container.appendChild(div);
-      });
+          container.appendChild(div);
+        });
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
     }
 
-    fetchEvents(); // On page load
-    setInterval(fetchEvents, 15000); // Refresh every 15 seconds
+    fetchEvents();
+    setInterval(fetchEvents, 15000);
   </script>
 </body>
 </html>
