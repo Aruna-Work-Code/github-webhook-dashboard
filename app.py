@@ -1,29 +1,25 @@
-from flask import Flask, request, render_template, Response
+from flask import Flask, request, render_template
 from pymongo import MongoClient
 from bson.json_util import dumps
-from dotenv import load_dotenv
-import os
-
-# Load environment variables from .env file
-load_dotenv()
 
 app = Flask(__name__)
 
-# Connect to MongoDB Atlas
-client = MongoClient(os.getenv("MONGO_URI"))
+# ✅ Connect to MongoDB Atlas
+client = MongoClient("mongodb+srv://Aruna_501:Sri%404788@webhook-cluster.v006jen.mongodb.net/webhook_db?retryWrites=true&w=majority&appName=webhook-cluster")
 db = client.webhook_db
 events_collection = db.events
 
-# Home route to display events
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Webhook endpoint to receive GitHub events
+# ✅ Webhook endpoint
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.json
     event_type = request.headers.get('X-GitHub-Event')
+    print("🔔 Webhook received:", event_type)
+
     formatted_data = {}
 
     try:
@@ -88,21 +84,21 @@ def webhook():
                 "timestamp": data['organization']['updated_at']
             }
 
-        # Save to MongoDB
+        # ✅ Store in MongoDB
         if formatted_data:
             events_collection.insert_one(formatted_data)
+            print("✅ Event saved to DB:", formatted_data)
 
     except Exception as e:
-        print("Webhook Error:", e)
-        return 'Error', 400
+        print("❌ Error processing webhook:", str(e))
 
     return '', 200
 
-# API route to send recent events to frontend
+# ✅ API to serve latest events
 @app.route('/events')
 def get_events():
     recent_events = events_collection.find().sort('_id', -1).limit(10)
-    return Response(dumps(recent_events), mimetype='application/json')
+    return dumps(recent_events)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(port=5000)
