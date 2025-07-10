@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>🌟 GitHub Activity Dashboard</title>
+  <title>🌟 GitHub Webhook Dashboard</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -17,9 +17,10 @@
       margin-bottom: 30px;
     }
 
+    /* Card style for each GitHub event */
     .event-card {
       background-color: #ffffff;
-      border-left: 6px solid #0984e3;
+      border-left: 6px solid #0984e3; /* default blue */
       margin: 15px auto;
       max-width: 700px;
       padding: 20px;
@@ -52,15 +53,21 @@
     .event-message {
       font-size: 15px;
       color: #444;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .timestamp {
-      font-size: 12px;
-      color: #888;
+      font-size: 13px;
+      color: #2d3436;
+      font-weight: 500;
+      background-color: #dfe6e9;
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-top: 8px;
     }
 
-    /* Color styles for different types */
+    /* Color classes for different event types */
     .push       { border-left-color: #0984e3; }  /* Blue */
     .pr         { border-left-color: #6c5ce7; }  /* Purple */
     .merge      { border-left-color: #00b894; }  /* Green */
@@ -80,13 +87,13 @@
       const res = await fetch('/events');
       const data = await res.json();
       const container = document.getElementById('event-container');
-      container.innerHTML = '';
+      container.innerHTML = ''; // Clear previous content
 
       data.forEach(event => {
         const div = document.createElement('div');
         div.classList.add('event-card');
 
-        // Set custom color class
+        // Assign color class
         const typeClass = {
           push: 'push',
           pull_request: 'pr',
@@ -99,7 +106,7 @@
 
         if (typeClass) div.classList.add(typeClass);
 
-        // User-friendly label
+        // Display names
         const typeLabel = {
           push: 'Push',
           pull_request: 'Pull Request',
@@ -112,14 +119,15 @@
 
         let message = '';
 
+        // Create human-readable message
         if (event.type === 'push') {
-          message = `${event.author} pushed to branch <strong>${event.to_branch}</strong>`;
+          message = `${event.author} pushed to <strong>${event.to_branch}</strong>`;
         } else if (event.type === 'pull_request') {
           message = `${event.author} opened a pull request from <strong>${event.from_branch}</strong> to <strong>${event.to_branch}</strong>`;
         } else if (event.type === 'merge') {
           message = `${event.author} merged <strong>${event.from_branch}</strong> into <strong>${event.to_branch}</strong>`;
         } else if (event.type === 'pull_request_review') {
-          message = `${event.author} reviewed a pull request with status <strong>${event.state}</strong>`;
+          message = `${event.author} reviewed a pull request (state: <strong>${event.state}</strong>)`;
         } else if (event.type === 'release') {
           message = `${event.author} published a release <strong>${event.tag}</strong>`;
         } else if (event.type === 'issue') {
@@ -128,6 +136,7 @@
           message = `${event.author} <strong>${event.action}</strong> member <strong>${event.member}</strong>`;
         }
 
+        // Add content to card
         div.innerHTML = `
           <div class="event-type">
             📌 ${typeLabel} <span>${event.type}</span>
@@ -140,8 +149,8 @@
       });
     }
 
-    fetchEvents(); // Load on page open
-    setInterval(fetchEvents, 15000); // Refresh every 15s
+    fetchEvents(); // On page load
+    setInterval(fetchEvents, 15000); // Refresh every 15 seconds
   </script>
 </body>
 </html>
